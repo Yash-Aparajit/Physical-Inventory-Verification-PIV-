@@ -20,14 +20,14 @@ function saveScanData(
   recorderName
 ) {
   const sheet = SpreadsheetApp.getActive().getSheetByName(COUNTS_SHEET_NAME);
-  const locationToSave = (areaType === 'Loc_Store') ? loc : '';
+  const locationToSave = (areaType === 'Loc_area_1') ? loc : '';
 
   sheet.appendRow([
     new Date(),              // A Timestamp
     partId,                  // B Part_ID
     desc,                    // C Description
     areaType,                // D Area_Type
-    locationToSave,          // E Store_Location
+    locationToSave,          // E area_1_Location
     subLocation || "",       // F Sub_Location(Prod.)
     Number(systemStock),     // G System_Stock
     Number(boxCount),        // H Box_Count
