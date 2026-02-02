@@ -153,6 +153,8 @@ PIV-QR-Inventory-Counting-System/
 
 3. Deploy as Web App (Use Chrome in incognito mode on mobile for best QR scanning support)
 
+---
+
 ## 📲 Usage (Operator Flow)
 ```bash
 ├──Open the Web App link on mobile
@@ -167,7 +169,7 @@ PIV-QR-Inventory-Counting-System/
 ## 📊 Generate Difference Report
 
 From the spreadsheet menu select PIV Tools → Rebuild Difference Report. Rows are appended in this order by Apps Script:
-
+```bash
 _________________________________
 |**Col**|	    **Field**         |
 ---------------------------------
@@ -185,21 +187,24 @@ _________________________________
 |  L	  | Reserved              |
 |  M	  | Recorder_Name         | 
 |_______________________________|
+```
 
 ---
 
 ## ⚠️ Known Limitations
-
+```bash
 -No hard blocking of duplicate scans (system logs everything — audit trail style)
 -If sheet names change, the script will fail
 -No user authentication inside UI (access control is controlled via Web App deployment settings)
+```
 
 ---
 
 ## 🗺️ Future Improvements (Planned)
-
+```bash
 -Permanent QR migration (unique Part_ID-based QR master)
 -Auto-sync “last scan per part” (Some times industries requires multiple scans per Item, Hence cannot implement hard blocking of duplicate scans)
+```
 
 ---
 
