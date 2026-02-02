@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;padding:24px;font-size:24px;max-width:720px;margin:auto}
+input,select,button{font-size:24px;padding:16px;width:100%;margin-top:24px;border-radius:10px}
+video{width:100%;margin-top:24px;border-radius:12px;display:none;background:black;min-height:260px}
+#details{margin-top:28px;padding:18px;border-radius:12px;border:2px solid #ddd;background:#fafafa}
+</style>
+</head>
+
+<body>
+<h2>PIV Scan & Count</h2>
+
+<button onclick="startScan()">📷 Start QR Scan</button>
+<video id="cam"></video>
+
+<input id="scanBox" placeholder="Scan or enter QR manually">
+<button onclick="processScan()">Process</button>
+
+<div id="details" style="display:none">
+<p><b>Part:</b> <span id="p"></span></p>
+<p><b>Description:</b> <span id="d"></span></p>
+<p><b>Location:</b> <span id="l"></span></p>
+<p><b>System:</b> <span id="s"></span></p>
+
+<select id="area" onchange="toggleSubLocation()">
+<option value="">Select area</option>
+<option value="Loc_Store">Store</option>
+<option value="Loc_Prod">Production</option>
+<option value="Loc_Qual">Quality</option>
+</select>
+
+<input id="subLoc" placeholder="Production Line / Sub-location (optional)" style="display:none">
+
+<input id="boxCount" type="number" placeholder="No. of boxes">
+<input id="qtyBox" type="number" placeholder="Qty per box">
+<input id="looseQty" type="number" placeholder="Loose quantity (optional)">
+
+<input id="recorderName" list="recorderList" placeholder="Recorder Name (optional)">
+<datalist id="recorderList"></datalist>
+
+<button onclick="save()">Save</button>
+</div>
+
+<p id="msg" style="color:green"></p>
+
+<script>
+/******** CLEAR MESSAGE ********/
+function clearMessage(){
+  document.getElementById("msg").innerText="";
+}
+
+/******** BEEP + VIBRATE ********/
+function beep(){
+ const ctx=new (window.AudioContext||window.webkitAudioContext)();
+ const o=ctx.createOscillator(),g=ctx.createGain();
+ g.gain.value=2;o.frequency.value=900;
+ o.connect(g);g.connect(ctx.destination);
+ o.start();o.stop(ctx.currentTime+0.25);
+}
+function vibrateStrong(){
+ if(navigator.vibrate)navigator.vibrate([200,80,200]);
+}
+
+let stream=null,part="",desc="",loc="",sys="";
+
+/******** CAMERA ********/
+async function startScan(){
+ clearMessage();
+ if(!("BarcodeDetector"in window))return alert("Use Chrome");
+ const v=document.getElementById("cam");
+ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+ v.srcObject=stream;v.play();v.style.display="block";
+ const d=new BarcodeDetector({formats:["qr_code"]});
+ const loop=async()=>{
+  const c=await d.detect(v).catch(()=>[]);
+  if(c.length){
+   beep();vibrateStrong();
+   scanBox.value=c[0].rawValue;
+   stopScan();processScan();return;
+  }
+  requestAnimationFrame(loop);
+ };
+ loop();
+}
+
+function stopScan(){
+ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+ cam.style.display="none";
+}
+
+/******** PROCESS QR ********/
+function processScan(){
+ clearMessage();
+ const a=scanBox.value.trim().split("|");
+ if(a.length<4)return alert("Invalid QR");
+ [part,desc,loc,sys]=a;
+ p.innerText=part;d.innerText=desc;l.innerText=loc;s.innerText=sys;
+ details.style.display="block";
+}
+
+/******** TOGGLE SUB LOCATION ********/
+function toggleSubLocation(){
+ const a=area.value;
+ subLoc.style.display=(a==="Loc_Prod")?"block":"none";
+ if(a!=="Loc_Prod")subLoc.value="";
+}
+
+/******** RECORDER AUTOSUGGEST ********/
+function loadRecorderNames(){
+ const list=document.getElementById("recorderList");
+ list.innerHTML="";
+ const names=JSON.parse(localStorage.getItem("recorderNames")||"[]");
+ names.forEach(n=>{
+  const o=document.createElement("option");
+  o.value=n;list.appendChild(o);
+ });
+}
+window.addEventListener("load",loadRecorderNames);
+
+/******** SAVE ********/
+function save(){
+ const box=Number(boxCount.value)||0;
+ const qty=Number(qtyBox.value)||0;
+ const loose=Number(looseQty.value)||0;
+ const recorder=recorderName.value.trim();
+ if(!area.value)return alert("Select area");
+
+ const physical=(box*qty);
+
+ if(recorder){
+  let names=JSON.parse(localStorage.getItem("recorderNames")||"[]");
+  if(!names.includes(recorder)){
+   names.push(recorder);
+   localStorage.setItem("recorderNames",JSON.stringify(names));
+   loadRecorderNames();
+  }
+ }
+
+ google.script.run.withSuccessHandler(m=>{
+  msg.innerText=m;
+  setTimeout(clearMessage,10000);
+  details.style.display="none";
+  scanBox.value=boxCount.value=qtyBox.value=looseQty.value=subLoc.value=recorderName.value="";
+  area.value="";
+ }).saveScanData(
+  part,desc,loc,sys,
+  area.value,subLoc.value,
+  box,qty,loose,physical,
+  recorder
+ );
+}
+</script>
+</body>
+</html>
