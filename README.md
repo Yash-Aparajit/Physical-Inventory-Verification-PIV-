@@ -170,9 +170,9 @@ PIV-QR-Inventory-Counting-System/
 
 From the spreadsheet menu select PIV Tools → Rebuild Difference Report. Rows are appended in this order by Apps Script:
 ```bash
-_________________________________
+__________________________________
 |**Col**|	    **Field**         |
----------------------------------
+-----------------------------------
 |  A	  | Timestamp             |
 |  B	  | Part_ID               |
 |  C	  | Description           |
@@ -186,7 +186,7 @@ _________________________________
 |  K	  | Loose_Qty             |
 |  L	  | Reserved              |
 |  M	  | Recorder_Name         | 
-|_______________________________ |
+|________________________________|
 ```
 
 ---
